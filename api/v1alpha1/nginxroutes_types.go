@@ -27,9 +27,10 @@ import (
 type NginxRoutesSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of NginxRoutes. Edit nginxroutes_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	ServerName   string `json:"serverName"`
+	ServerBody   string `json:"serverBody"`
+	ServerPort   int32  `json:"serverPort"`
+	TemplateFile string `json:"templateFile"`
 }
 
 // NginxRoutesStatus defines the observed state of NginxRoutes

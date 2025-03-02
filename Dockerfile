@@ -1,10 +1,9 @@
 # Build the manager binary
-FROM golang:1.22 AS builder
+FROM golang:1.24.0-alpine3.21 as builder
 ARG TARGETOS
 ARG TARGETARCH
 # Install Nginx
-RUN apt-get update && apt-get install -y nginx
-
+RUN apk add --no-cache bash nginx
 WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY go.mod go.mod
@@ -16,7 +15,7 @@ RUN go mod download
 # Copy the go source
 COPY cmd/main.go cmd/main.go
 COPY api/ api/
-COPY internal/controller/ internal/controller/
+COPY internal/ internal/
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command
@@ -30,6 +29,8 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /workspace/manager .
+
+# Set the user to nonroot (to ensure we're using a non-privileged user)
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]

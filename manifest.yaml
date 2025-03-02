@@ -1,0 +1,92 @@
+# Service account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-operator-sa
+--- 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nginx-operator-cluster-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["get", "list", "create", "update", "delete"]
+- apiGroups: ["nginx.gokul-mylsami.com"]
+  resources: ["nginxroutes"]
+  verbs: ["get", "list", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: nginx-operator-cluster-role-binding
+subjects:
+- kind: ServiceAccount
+  name: nginx-operator-sa
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: nginx-operator-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  default.conf.template: |
+    server {
+        listen {{ .Spec.ServerPort }};
+        server_name {{ .Spec.ServerName }};
+        {{ .Spec.ServerBody }}
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-operator
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      serviceAccountName: nginx-operator-sa
+      containers:
+        - name: nginx
+          image: gokulmylsami/operator:v3
+          imagePullPolicy: Always
+          env:
+            - name: ENV_TYPE
+              value: PROD
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/operator/templates/
+          ports:
+            - containerPort: 80
+      volumes:
+        - name: nginx-config-volume
+          configMap:
+            name: nginx-config
+---
+apiVersion: nginx.gokul-mylsami.com/v1alpha1
+kind: NginxRoutes
+metadata:
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: nginxroutes-sample
+spec:
+  serverName: "example.com"
+  serverBody: |
+    location / {
+      return 200 'Hello, World!';
+    }
+  serverPort: 80
+  templateFile: "default.conf.template"

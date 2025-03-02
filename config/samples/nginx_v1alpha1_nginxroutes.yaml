@@ -6,4 +6,10 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: nginxroutes-sample
 spec:
-  # TODO(user): Add fields here
+  serverName: "example.com"
+  serverBody: |
+    location / {
+      return 200 'Hello, World!';
+    }
+  serverPort: 80
+  templateFile: "default.conf.template"

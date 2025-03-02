@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -25,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	nginxv1alpha1 "github.com/gokul-mylsami/nginx-operator/api/v1alpha1"
+	"github.com/gokul-mylsami/nginx-operator/internal/utils"
 )
 
 // NginxRoutesReconciler reconciles a NginxRoutes object
@@ -49,7 +51,30 @@ type NginxRoutesReconciler struct {
 func (r *NginxRoutesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	fmt.Println("Server Started")
+	nginxRoutes := &nginxv1alpha1.NginxRoutes{}
+	err := r.Get(ctx, req.NamespacedName, nginxRoutes)
+
+	if err != nil {
+		log.Log.Error(err, "unable to fetch NginxRoutes")
+		return ctrl.Result{}, err
+	}
+
+	// // get all deployment in all namespaces and print it's replicas
+	// deployments := &v1.DeploymentList{}
+
+	// err = r.Client.List(ctx, deployments, &client.ListOptions{})
+
+	// if err != nil {
+	// 	log.Log.Error(err, "unable to fetch deployments")
+	// 	return ctrl.Result{}, err
+	// }
+
+	// for _, deployment := range deployments.Items {
+	// 	fmt.Printf("Deployment %s has %d replicas\n", deployment.Name, *deployment.Spec.Replicas)
+	// }
+
+	utils.NginxTemplateGenerator(*nginxRoutes, nginxRoutes.Spec.TemplateFile)
 
 	return ctrl.Result{}, nil
 }

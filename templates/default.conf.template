@@ -1,0 +1,5 @@
+server {
+        listen {{ .Spec.ServerPort }};
+        server_name {{ .Spec.ServerName }};
+        {{ .Spec.ServerBody }}
+}
