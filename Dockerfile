@@ -26,11 +26,19 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot
+# FROM gcr.io/distroless/static:nonroot as runner
+# WORKDIR /
+# COPY --from=builder /workspace/manager .
+
+# # Set the user to nonroot (to ensure we're using a non-privileged user)
+# USER 65532:65532
+
+# ENTRYPOINT ["/manager"]
+
+
+FROM nginx
 WORKDIR /
+RUN apt-get update && apt-get install -y bash vim
+RUN mkdir -p /etc/nginx/templates
 COPY --from=builder /workspace/manager .
-
-# Set the user to nonroot (to ensure we're using a non-privileged user)
-USER 65532:65532
-
-ENTRYPOINT ["/manager"]
+ENTRYPOINT [ "/manager" ]

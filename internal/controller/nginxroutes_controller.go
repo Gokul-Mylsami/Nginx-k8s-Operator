@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	nginxv1alpha1 "github.com/gokul-mylsami/nginx-operator/api/v1alpha1"
+	"github.com/gokul-mylsami/nginx-operator/internal/utils"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	nginxv1alpha1 "github.com/gokul-mylsami/nginx-operator/api/v1alpha1"
-	"github.com/gokul-mylsami/nginx-operator/internal/utils"
 )
 
 // NginxRoutesReconciler reconciles a NginxRoutes object
@@ -73,6 +72,21 @@ func (r *NginxRoutesReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// for _, deployment := range deployments.Items {
 	// 	fmt.Printf("Deployment %s has %d replicas\n", deployment.Name, *deployment.Spec.Replicas)
 	// }
+
+	// fmt.Println("Secret Reader")
+	// secret := &corev1.Secret{}
+
+	// err = r.Client.Get(ctx, types.NamespacedName{Name: "dotfile-secret", Namespace: "default"}, secret)
+
+	// if err != nil {
+	// 	log.Log.Error(err, "unable to fetch secret")
+	// 	return ctrl.Result{}, err
+	// }
+
+	// fmt.Println(string(secret.Data[".secret-file"]))
+	// decode the secret and print it's value
+
+	utils.SecretGenerator(r.Client, ctx, *nginxRoutes)
 
 	utils.NginxTemplateGenerator(*nginxRoutes, nginxRoutes.Spec.TemplateFile)
 

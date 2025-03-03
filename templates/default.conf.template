@@ -1,5 +1,23 @@
 server {
-        listen {{ .Spec.ServerPort }};
-        server_name {{ .Spec.ServerName }};
-        {{ .Spec.ServerBody }}
+    listen {{ .Spec.ServerPort }};
+    server_name {{ .Spec.ServerName }};
+
+    {{- if .Spec.CustomDirectives }}
+        {{- range .Spec.CustomDirectives }}
+            {{ . }}
+        {{- end }}
+    {{- end }}
+
+    {{- if .Spec.TLSCertificate }}
+        ssl_certificate /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.crt
+        ssl_certificate_key /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.key
+    {{- end }}
+
+    {{- if .Spec.CustomLocations }}
+        {{- range .Spec.CustomLocations }}
+            location {{ .Location }} {
+                {{ .Definition }}
+            }
+        {{- end }}
+    {{- end }}
 }

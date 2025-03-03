@@ -39,8 +39,22 @@ spec:
           spec:
             description: NginxRoutesSpec defines the desired state of NginxRoutes
             properties:
-              serverBody:
-                type: string
+              customDirectives:
+                items:
+                  type: string
+                type: array
+              customLocations:
+                items:
+                  properties:
+                    definition:
+                      type: string
+                    location:
+                      type: string
+                  required:
+                  - definition
+                  - location
+                  type: object
+                type: array
               serverName:
                 description: |-
                   INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -51,8 +65,17 @@ spec:
                 type: integer
               templateFile:
                 type: string
+              tlsCertificate:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
             required:
-            - serverBody
             - serverName
             - serverPort
             - templateFile

@@ -27,16 +27,28 @@ import (
 type NginxRoutesSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	ServerName   string `json:"serverName"`
-	ServerBody   string `json:"serverBody"`
-	ServerPort   int32  `json:"serverPort"`
-	TemplateFile string `json:"templateFile"`
+	ServerName       string            `json:"serverName"`
+	ServerPort       int32             `json:"serverPort"`
+	TemplateFile     string            `json:"templateFile"`
+	TLSCertificate   TLSCertificate    `json:"tlsCertificate,omitempty"`
+	CustomLocations  []CustomLocations `json:"customLocations,omitempty"`
+	CustomDirectives []string          `json:"customDirectives,omitempty"`
 }
 
 // NginxRoutesStatus defines the observed state of NginxRoutes
 type NginxRoutesStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+}
+
+type TLSCertificate struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+}
+
+type CustomLocations struct {
+	Location   string `json:"location"`
+	Definition string `json:"definition"`
 }
 
 // +kubebuilder:object:root=true

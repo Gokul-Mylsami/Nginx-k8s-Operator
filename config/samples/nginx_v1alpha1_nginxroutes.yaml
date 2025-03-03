@@ -7,9 +7,12 @@ metadata:
   name: nginxroutes-sample
 spec:
   serverName: "example.com"
-  serverBody: |
-    location / {
-      return 200 'Hello, World!';
-    }
   serverPort: 80
   templateFile: "default.conf.template"
+  tlsCertificate: 
+    name: dotfile-secret
+    namespace: default
+  customLocations: 
+    - location: "/api"
+      definition: | 
+        proxy_pass http://api-service:8080;

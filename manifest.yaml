@@ -35,11 +35,29 @@ metadata:
   name: nginx-config
 data:
   default.conf.template: |
-    server {
-        listen {{ .Spec.ServerPort }};
-        server_name {{ .Spec.ServerName }};
-        {{ .Spec.ServerBody }}
-    }
+      server {
+          listen {{ .Spec.ServerPort }};
+          server_name {{ .Spec.ServerName }};
+
+          {{- if .Spec.CustomDirectives }}
+              {{- range .Spec.CustomDirectives }}
+                  {{ . }}
+              {{- end }}
+          {{- end }}
+
+          {{- if .Spec.TLSCertificate }}
+              ssl_certificate /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.crt
+              ssl_certificate_key /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.key
+          {{- end }}
+
+          {{- if .Spec.CustomLocations }}
+              {{- range .Spec.CustomLocations }}
+                  location {{ .Location }} {
+                      {{ .Definition }}
+                  }
+              {{- end }}
+          {{- end }}
+      }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -62,6 +80,13 @@ spec:
         - name: nginx
           image: gokulmylsami/operator:v3
           imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
           env:
             - name: ENV_TYPE
               value: PROD
@@ -84,9 +109,12 @@ metadata:
   name: nginxroutes-sample
 spec:
   serverName: "example.com"
-  serverBody: |
-    location / {
-      return 200 'Hello, World!';
-    }
   serverPort: 80
   templateFile: "default.conf.template"
+  tlsCertificate: 
+    name: dotfile-secret
+    namespace: default
+  customLocations: 
+    - location: "/api"
+      definition: | 
+        proxy_pass http://api-service:8080;
