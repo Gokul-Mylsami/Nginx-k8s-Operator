@@ -23,55 +23,44 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// NginxRoutesSpec defines the desired state of NginxRoutes
-type NginxRoutesSpec struct {
+// NginxUpstreamSpec defines the desired state of NginxUpstream
+type NginxUpstreamSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	ServerName       string            `json:"serverName,omitempty"`
-	ServerPort       int32             `json:"serverPort"`
-	TemplateFile     string            `json:"templateFile"`
-	TLSCertificate   TLSCertificate    `json:"tlsCertificate,omitempty"`
-	CustomLocations  []CustomLocations `json:"customLocations,omitempty"`
-	CustomDirectives []string          `json:"customDirectives,omitempty"`
+
+	// Foo is an example field of NginxUpstream. Edit nginxupstream_types.go to remove/update
+	UpstreamName    string   `json:"upstreamName"`
+	UpstreamServers []string `json:"upstreamServers"`
+	TemplateFile    string   `json:"templateFile"`
 }
 
-// NginxRoutesStatus defines the observed state of NginxRoutes
-type NginxRoutesStatus struct {
+// NginxUpstreamStatus defines the observed state of NginxUpstream
+type NginxUpstreamStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-}
-
-type TLSCertificate struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-}
-
-type CustomLocations struct {
-	Location   string `json:"location"`
-	Definition string `json:"definition"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// NginxRoutes is the Schema for the nginxroutes API
-type NginxRoutes struct {
+// NginxUpstream is the Schema for the nginxupstreams API
+type NginxUpstream struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   NginxRoutesSpec   `json:"spec,omitempty"`
-	Status NginxRoutesStatus `json:"status,omitempty"`
+	Spec   NginxUpstreamSpec   `json:"spec,omitempty"`
+	Status NginxUpstreamStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// NginxRoutesList contains a list of NginxRoutes
-type NginxRoutesList struct {
+// NginxUpstreamList contains a list of NginxUpstream
+type NginxUpstreamList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []NginxRoutes `json:"items"`
+	Items           []NginxUpstream `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&NginxRoutes{}, &NginxRoutesList{})
+	SchemeBuilder.Register(&NginxUpstream{}, &NginxUpstreamList{})
 }

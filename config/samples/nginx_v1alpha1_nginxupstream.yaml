@@ -1,0 +1,12 @@
+apiVersion: nginx.gokul-mylsami.com/v1alpha1
+kind: NginxUpstream
+metadata:
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: nginxupstream-sample
+spec:
+  upstreamName: "api-service"
+  templateFile: "upstream.conf.template"
+  upstreamServers:
+    - "api-service.default.svc.cluster.local"

@@ -1,6 +1,11 @@
 server {
+    include /etc/nginx/conf.d/*.conf;
+    
     listen {{ .Spec.ServerPort }};
+
+    {{- if .Spec.ServerName }}
     server_name {{ .Spec.ServerName }};
+    {{- end }}
 
     {{- if .Spec.CustomDirectives }}
         {{- range .Spec.CustomDirectives }}
@@ -9,8 +14,8 @@ server {
     {{- end }}
 
     {{- if .Spec.TLSCertificate }}
-        ssl_certificate /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.crt
-        ssl_certificate_key /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.key
+        ssl_certificate /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.crt;
+        ssl_certificate_key /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.key;
     {{- end }}
 
     {{- if .Spec.CustomLocations }}

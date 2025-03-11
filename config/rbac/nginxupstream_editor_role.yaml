@@ -1,13 +1,15 @@
----
+# permissions for end users to edit nginxupstreams.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: manager-role
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: nginxupstream-editor-role
 rules:
 - apiGroups:
   - nginx.gokul-mylsami.com
   resources:
-  - nginxroutes
   - nginxupstreams
   verbs:
   - create
@@ -20,16 +22,6 @@ rules:
 - apiGroups:
   - nginx.gokul-mylsami.com
   resources:
-  - nginxroutes/finalizers
-  - nginxupstreams/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - nginx.gokul-mylsami.com
-  resources:
-  - nginxroutes/status
   - nginxupstreams/status
   verbs:
   - get
-  - patch
-  - update

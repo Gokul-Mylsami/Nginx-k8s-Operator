@@ -22,6 +22,8 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the Project itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
+- nginxupstream_editor_role.yaml
+- nginxupstream_viewer_role.yaml
 - nginxroutes_editor_role.yaml
 - nginxroutes_viewer_role.yaml
 

@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: nginx-config
 data:
-  default.conf.template: |
+  default.conf: |
     server {
         listen 80;
 
@@ -12,13 +12,17 @@ data:
         }
 
         location /api/ {
-          proxy_pass http://${BACKEND_API}/api/;
+          proxy_pass http://example.com/api/;
         }
 
         error_page  500 502 503 504 /50x.html;
         location = /50x.html {
             root /usr/share/nginx/html;
         }
+    }
+  upstream.conf: |
+    upstream example.com {
+        server example.com;
     }
 ---
 apiVersion: apps/v1
@@ -45,7 +49,7 @@ spec:
               value: "example.com" # You can customize environment variables
           volumeMounts:
             - name: nginx-config-volume
-              mountPath: /etc/nginx/templates/ # Mount template directory
+              mountPath: /etc/nginx/conf.d/
           ports:
             - containerPort: 80
       volumes:

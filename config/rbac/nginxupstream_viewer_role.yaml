@@ -1,35 +1,23 @@
----
+# permissions for end users to view nginxupstreams.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: manager-role
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: nginxupstream-viewer-role
 rules:
 - apiGroups:
   - nginx.gokul-mylsami.com
   resources:
-  - nginxroutes
   - nginxupstreams
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - nginx.gokul-mylsami.com
   resources:
-  - nginxroutes/finalizers
-  - nginxupstreams/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - nginx.gokul-mylsami.com
-  resources:
-  - nginxroutes/status
   - nginxupstreams/status
   verbs:
   - get
-  - patch
-  - update

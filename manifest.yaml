@@ -10,11 +10,11 @@ metadata:
   name: nginx-operator-cluster-role
 rules:
 - apiGroups: [""]
-  resources: ["pods", "services", "configmaps", "secrets"]
-  verbs: ["get", "list", "create", "update", "delete"]
-- apiGroups: ["nginx.gokul-mylsami.com"]
-  resources: ["nginxroutes"]
-  verbs: ["get", "list", "create", "update", "delete"]
+  resources: [ "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["nginx.gokul-mylsami.com",]
+  resources: ["nginxroutes","nginxupstreams"]
+  verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -37,7 +37,9 @@ data:
   default.conf.template: |
       server {
           listen {{ .Spec.ServerPort }};
-          server_name {{ .Spec.ServerName }};
+              {{- if .Spec.ServerName }}
+              server_name {{ .Spec.ServerName }};
+              {{- end }}
 
           {{- if .Spec.CustomDirectives }}
               {{- range .Spec.CustomDirectives }}
@@ -46,8 +48,8 @@ data:
           {{- end }}
 
           {{- if .Spec.TLSCertificate }}
-              ssl_certificate /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.crt
-              ssl_certificate_key /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.key
+              ssl_certificate /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.crt;
+              ssl_certificate_key /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.key;
           {{- end }}
 
           {{- if .Spec.CustomLocations }}
@@ -56,6 +58,33 @@ data:
                       {{ .Definition }}
                   }
               {{- end }}
+          {{- end }}
+      }
+  main.conf.template: |
+     server {
+          listen {{ .Spec.ServerPort }};
+          {{- if .Spec.ServerName }}
+          server_name {{ .Spec.ServerName }};
+          {{- end }}
+
+          {{- if .Spec.CustomDirectives }}
+              {{- range .Spec.CustomDirectives }}
+                  {{ . }}
+              {{- end }}
+          {{- end }}
+
+          {{- if .Spec.CustomLocations }}
+              {{- range .Spec.CustomLocations }}
+                  location {{ .Location }} {
+                      {{ .Definition }}
+                  }
+              {{- end }}
+          {{- end }}
+      }
+  upstream.conf.template: |
+      upstream {{ .Spec.UpstreamName }} {
+          {{- range .Spec.UpstreamServers }}
+                  server {{ . }};
           {{- end }}
       }
 ---
@@ -109,12 +138,41 @@ metadata:
   name: nginxroutes-sample
 spec:
   serverName: "example.com"
-  serverPort: 80
+  serverPort: 443
   templateFile: "default.conf.template"
   tlsCertificate: 
     name: dotfile-secret
     namespace: default
   customLocations: 
-    - location: "/api"
+    - location: "/"
       definition: | 
-        proxy_pass http://api-service:8080;
+        return 200 'Hello, World!';
+---
+apiVersion: nginx.gokul-mylsami.com/v1alpha1
+kind: NginxUpstream
+metadata:
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: nginxupstream-sample
+spec:
+  upstreamName: "api-service"
+  templateFile: "upstream.conf.template"
+  upstreamServers:
+    - "api-service.default.svc.cluster.local"
+---
+apiVersion: nginx.gokul-mylsami.com/v1alpha1
+kind: NginxRoutes
+metadata:
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: nginxroutes-sample1
+spec:
+  serverPort: 80
+  serverName: "_"
+  templateFile: "main.conf.template"
+  customLocations: 
+    - location: "/"
+      definition: | 
+        return 200 'Hello, World!';

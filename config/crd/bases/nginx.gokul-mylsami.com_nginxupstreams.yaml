@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-  name: nginxroutes.nginx.gokul-mylsami.com
+  name: nginxupstreams.nginx.gokul-mylsami.com
 spec:
   group: nginx.gokul-mylsami.com
   names:
-    kind: NginxRoutes
-    listKind: NginxRoutesList
-    plural: nginxroutes
-    singular: nginxroutes
+    kind: NginxUpstream
+    listKind: NginxUpstreamList
+    plural: nginxupstreams
+    singular: nginxupstream
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: NginxRoutes is the Schema for the nginxroutes API
+        description: NginxUpstream is the Schema for the nginxupstreams API
         properties:
           apiVersion:
             description: |-
@@ -37,50 +37,25 @@ spec:
           metadata:
             type: object
           spec:
-            description: NginxRoutesSpec defines the desired state of NginxRoutes
+            description: NginxUpstreamSpec defines the desired state of NginxUpstream
             properties:
-              customDirectives:
+              templateFile:
+                type: string
+              upstreamName:
+                description: Foo is an example field of NginxUpstream. Edit nginxupstream_types.go
+                  to remove/update
+                type: string
+              upstreamServers:
                 items:
                   type: string
                 type: array
-              customLocations:
-                items:
-                  properties:
-                    definition:
-                      type: string
-                    location:
-                      type: string
-                  required:
-                  - definition
-                  - location
-                  type: object
-                type: array
-              serverName:
-                description: |-
-                  INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                  Important: Run "make" to regenerate code after modifying this file
-                type: string
-              serverPort:
-                format: int32
-                type: integer
-              templateFile:
-                type: string
-              tlsCertificate:
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                - namespace
-                type: object
             required:
-            - serverPort
             - templateFile
+            - upstreamName
+            - upstreamServers
             type: object
           status:
-            description: NginxRoutesStatus defines the observed state of NginxRoutes
+            description: NginxUpstreamStatus defines the observed state of NginxUpstream
             type: object
         type: object
     served: true

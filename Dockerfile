@@ -39,6 +39,5 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 FROM nginx
 WORKDIR /
 RUN apt-get update && apt-get install -y bash vim
-RUN mkdir -p /etc/nginx/templates
 COPY --from=builder /workspace/manager .
 ENTRYPOINT [ "/manager" ]

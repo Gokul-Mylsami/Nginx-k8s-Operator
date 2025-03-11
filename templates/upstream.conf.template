@@ -1,0 +1,5 @@
+upstream {{ .Spec.UpstreamName }} {
+    {{- range .Spec.UpstreamServers }}
+            server {{ . }};
+    {{- end }}
+}
