@@ -1,100 +1,149 @@
-# operator
-// TODO(user): Add simple overview of use/purpose
+# 🚀 NGINX Operator  
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+## 📌 Overview  
+The **NGINX Operator** is a custom **CRD tool** that can be used in **Kubernetes** as an alternative to vanilla **NGINX**.  
 
-## Getting Started
+### 🔍 Key Differences from Vanilla NGINX  
+✅ With **vanilla NGINX**, configuration files must be **manually mounted** or managed through other methods. If any changes are made, a **rollout restart** of NGINX components is required for the updates to take effect.  
 
-### Prerequisites
-- go version v1.22.0+
-- docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
+✅ The **NGINX Operator** eliminates this issue by using custom CRDs such as **`NginxRoutes`** and **`NginxUpstreams`** to **dynamically mount configurations**. This ensures that NGINX picks up new changes **without requiring a reload**.  
 
-### To Deploy on the cluster
-**Build and push your image to the location specified by `IMG`:**
+### 🎯 Benefits of Using NGINX Operator  
+🔹 **No manual configuration mounting**  
+🔹 **No need for rollout restarts**  
+🔹 **Dynamic and seamless config updates**  
 
-```sh
-make docker-build docker-push IMG=<some-registry>/operator:tag
-```
+🔥 **Simplify your NGINX management with the NGINX Operator!** 🚀  
 
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
 
-**Install the CRDs into the cluster:**
+## 🚀 Getting Started  
+
+### Step 1: Install the NGINX Operator CRDs  
+
+Run the following commands to install the required CRDs for the NGINX Operator:  
 
 ```sh
-make install
+kubectl apply -f https://raw.githubusercontent.com/Gokul-Mylsami/Nginx-k8s-Operator/refs/heads/main/config/crd/bases/nginx.gokul-mylsami.com_nginxroutes.yaml
+
+kubectl apply -f https://raw.githubusercontent.com/Gokul-Mylsami/Nginx-k8s-Operator/refs/heads/main/config/crd/bases/nginx.gokul-mylsami.com_nginxupstreams.yaml
+
 ```
 
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
+### Step 2: Create a Route Template
+Define a route template based on your use case.
 
-```sh
-make deploy IMG=<some-registry>/operator:tag
+
+```sh 
+# Example Template 
+server {
+    include /etc/nginx/conf.d/*.conf;
+    
+    listen {{ .Spec.ServerPort }};
+
+    {{- if .Spec.ServerName }}
+    server_name {{ .Spec.ServerName }};
+    {{- end }}
+
+    {{- if .Spec.CustomDirectives }}
+        {{- range .Spec.CustomDirectives }}
+            {{ . }}
+        {{- end }}
+    {{- end }}
+
+    {{- if .Spec.TLSCertificate }}
+        ssl_certificate /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.crt;
+        ssl_certificate_key /etc/nginx/ssl/{{.Spec.TLSCertificate.Name}}-{{.Spec.TLSCertificate.Namespace}}.key;
+    {{- end }}
+
+    {{- if .Spec.CustomLocations }}
+        {{- range .Spec.CustomLocations }}
+            location {{ .Location }} {
+                {{ .Definition }}
+            }
+        {{- end }}
+    {{- end }}
+}
+
 ```
 
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
+This NGINX template must be provided when creating routes to generate an NGINX configuration tailored to the application's needs.
 
-**Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
+**Note**: The NGINX Operator uses Go templating functions, so ensure the syntax is correct. For more details, refer to the <a href="https://pkg.go.dev/text/template">Go templating documentation</a>.
 
-```sh
-kubectl apply -k config/samples/
+### Step 3: Deploy the NGINX Operator
+
+Create a Deployment or StatefulSet for the NGINX Operator using the image: `gokulmylsami/operator:v3`
+
+Example: 
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-operator
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      serviceAccountName: nginx-operator-sa
+      containers:
+        - name: nginx
+          image: gokulmylsami/operator:v3
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+          env:
+            - name: ENV_TYPE
+              value: PROD
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/operator/templates/
+          ports:
+            - containerPort: 80
+      volumes:
+        - name: nginx-config-volume
+          configMap:
+            name: nginx-config   # This is the template ConfigMap created in Step 2  
+
 ```
 
->**NOTE**: Ensure that the samples has default values to test it out.
+### Step 4: Create and Deploy a Route
 
-### To Uninstall
-**Delete the instances (CRs) from the cluster:**
+Define and deploy a NginxRoute resource in your Kubernetes cluster.
 
-```sh
-kubectl delete -k config/samples/
+```yaml
+apiVersion: nginx.gokul-mylsami.com/v1alpha1
+kind: NginxRoutes
+metadata:
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: nginxroutes-sample
+spec:
+  serverPort: 80
+  serverName: "_"
+  templateFile: "main.conf.template"
+  customLocations: 
+    - location: "/"
+      definition: | 
+        return 200 'Hello, World!';
 ```
 
-**Delete the APIs(CRDs) from the cluster:**
-
-```sh
-make uninstall
-```
-
-**UnDeploy the controller from the cluster:**
-
-```sh
-make undeploy
-```
-
-## Project Distribution
-
-Following are the steps to build the installer and distribute this project to users.
-
-1. Build the installer for the image built and published in the registry:
-
-```sh
-make build-installer IMG=<some-registry>/operator:tag
-```
-
-NOTE: The makefile target mentioned above generates an 'install.yaml'
-file in the dist directory. This file contains all the resources built
-with Kustomize, which are necessary to install this project without
-its dependencies.
-
-2. Using the installer
-
-Users can just run kubectl apply -f <URL for YAML BUNDLE> to install the project, i.e.:
-
-```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/operator/<tag or branch>/dist/install.yaml
-```
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-**NOTE:** Run `make help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+🎉 You have successfully set up the NGINX Operator! 🚀
+Now, your NGINX configurations can be dynamically updated without requiring a full reload.
 
 ## License
 

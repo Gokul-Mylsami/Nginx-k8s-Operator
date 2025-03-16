@@ -1,5 +1,0 @@
-feature 1 : nginx template renderer  - completed 
-feature 2 : Add nginx template proper schema 
-            - secret reader from any namespace - working 
-            - custom directives - completed
-            - custom locations - completed
